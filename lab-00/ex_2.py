@@ -25,12 +25,12 @@ def find_root(f, df, x0):
 
         next_x = x - f(x) / d
 
-        if abs(next_x - x) < 1e-4:
+        if abs(next_x - x) < 0.001:
             return next_x
 
         x = next_x
 
-    return None  # exceeded 100 iterations
+    return None
 
 def f1(x):
     return(2 - x*x)
