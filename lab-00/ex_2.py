@@ -17,27 +17,20 @@ import math
 # or runs for more than 100 iterations.
 
 def find_root(f, df, x0):
-    i = 0
     x = x0
-    while True:
-      derivative = df(x)
-      if derivative == 0:
-        print("{} - {}".format(i, x))
-        # if < insert expression to compute absolute difference of x and next_x > < 0.0001:
-        return x
-    
-      next_x = x - (f(x) / derivative)
+    for i in range(100):
+        d = df(x)
+        if d == 0:
+            return None
 
-      if abs(next_x - x) < 0.001:
-        return x
-      
-      # Check if iterations have hit 100
-      if i > 100:
-        print("Hit max_iterations - abandoning search!")
-        return None
-      
-      # Increment iteration
-      i += 1
+        next_x = x - f(x) / d
+
+        if abs(next_x - x) < 1e-4:
+            return next_x
+
+        x = next_x
+
+    return None  # exceeded 100 iterations
 
 def f1(x):
     return(2 - x*x)
