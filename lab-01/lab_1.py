@@ -74,9 +74,10 @@ def mean_squared_error(y1, y2):
     # You can use '-' to compute the elementwise difference of numpy vectors (i.e. y1 - y2).
     # You can use '**' for elementwise exponentiation of a numpy vector.
     # You can use the numpy function 'mean' to compute the mean of a vector.
-    return 0  # replace this with your answer.
+    diff = np.asarray(y1) - np.asarray(y2)
+    return np.mean(diff**2)
 
 # EXERCISE 4: return the number of the best order for the supplied
 # data (see the notebook).
 def question_4():
-    return 0   # replace '0' with your answer.
+    return 3   # replace '0' with your answer.
