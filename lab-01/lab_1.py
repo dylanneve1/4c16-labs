@@ -63,7 +63,9 @@ def linear_regression(X, y, eps=0):
     # The number of rows in a matrix 'A' is then 'A.shape[0]' (or 'len(A)')
     # You can add matrices with '+' -- so you will update 'M' with 'M = M + <amount> * <identity>'
     # Note that the amount of regularization is denoted 'alpha' in the slides but here it's 'eps'.
-    
+    if eps != 0:
+      M = M + eps * np.identity(M.shape[0])
+
     theta = np.dot(np.linalg.inv(M), np.dot(X.transpose(), y))
     return theta
 
