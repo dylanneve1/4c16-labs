@@ -39,13 +39,14 @@ def predict(w, X):
 #   'y' are the true class values
 def cross_entropy(w, X, y):
     # Use the 'predict' function to compute the predicted probability of label 1
-    p = [0] #<replace '[0]' with a call to the predict function>
+    p = predict(w, X)
 
     # Now compute the cross entropy.
     #
     # Because this involves taking logs, you should add 'eps' where necessary to
     # avoid taking the log of 0.
     eps = 0.000001
+    p = p + eps
 
     # Computation of the cross-entropy can be done in one line using numpy
     # functions log and mean.
@@ -53,9 +54,10 @@ def cross_entropy(w, X, y):
     # Or it can be done in a more straightforward way: initialize an accumulator
     # variable to 0, do a 'for' loop over the elements of 'y', and update the
     # accumulator as appropriate (using 'math.log'). (THIS WILL BE SLOW)
+    ce = -np.mean(y * np.log(p) + (1 - y) * np.log(1 - p))
 
     # Don't forget to return the average rather than the sum.
-    return 0
+    return ce
 
 
 #
