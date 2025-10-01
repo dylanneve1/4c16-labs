@@ -85,7 +85,7 @@ def gradient(w, X, y):
 # What learning rate is best for the data set supplied in the notebook?
 # eg. return 45 or return 0.1 (doesn't have to be super precise)
 def question_3():
-    return 15 # <- change this value
+    return 25 # <- change this value
 
 #
 # #### EXERCISE 4 ####
