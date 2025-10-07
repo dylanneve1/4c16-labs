@@ -119,7 +119,7 @@ def question_5():
 #       and the other coefficients from log_reg.coef_.
 
 def question_6():
-    return 0 # <- change this with estimated bias for logit of class=0
+    return 8.6786403 # <- change this with estimated bias for logit of class=0
 
 # #### EXERCISE 7 ####
 # 
