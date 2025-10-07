@@ -146,7 +146,7 @@ def question_6():
 
 def question_7():
     return {
-      'Features': (0,1), # replace with the best pair
+      'Features': (0,2), # replace with the best pair
       'Acc': 0.77777     # replace with the accuracy for that pair
       }    
 
