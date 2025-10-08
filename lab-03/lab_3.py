@@ -16,7 +16,7 @@ def question_1():
 def question_2():
     # This function returns a single number,
     # corresponding to the answer.
-    return -1 # Replace with your answer.
+    return 1.30 # Replace with your answer.
 
 def question_3():
     # This function returns a single number,
