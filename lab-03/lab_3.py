@@ -26,4 +26,4 @@ def question_3():
 def question_4():
     # This function returns a single number, corresponding to the
     # digit most commonly misclassified.
-    return -1 # Replace with your answer.
+    return 9 # Replace with your answer.
