@@ -10,7 +10,8 @@ class SimpleNN(nn.Module):
         # here we define all the layers/transformations being used.
         self.flatten = nn.Flatten()
         self.fc1 = nn.Linear(3*32*32, 1024)     # Single Fully Connected linear layer
-        self.fc2 = nn.Linear(32, num_classes) # Single Fully Connected linear layer
+        self.fc2 = nn.Linear(1024, 512)
+        self.fc3 = nn.Linear(512, num_classes) # Single Fully Connected linear layer
 
         self.use_dropout = use_dropout
         if self.use_dropout:
