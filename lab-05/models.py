@@ -33,13 +33,13 @@ class ConvNN(nn.Module):
         )
         self.avgpool = nn.AdaptiveAvgPool2d((2, 2))
         self.classifier = nn.Sequential(
-          nn.Dropout(0.5),
+          nn.Dropout(0.8),
         	nn.Linear(256 * 2 * 2, 1024),
         	nn.ReLU(inplace=True),
-          nn.Dropout(0.5),
+          nn.Dropout(0.8),
 			    nn.Linear(1024, 256),
         	nn.ReLU(inplace=True),
-          nn.Dropout(0.3),
+          nn.Dropout(0.8),
         	nn.Linear(256, num_classes),
         )
 
