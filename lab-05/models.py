@@ -25,22 +25,22 @@ class ConvNN(nn.Module):
         	nn.ReLU(inplace=True),
         	nn.MaxPool2d(kernel_size=2, stride=2),
         	# Block 4
-        	nn.Conv2d(256, 256, kernel_size=3, padding=1),
+        	nn.Conv2d(256, 348, kernel_size=3, padding=1),
         	nn.ReLU(inplace=True),
-        	nn.Conv2d(256, 256, kernel_size=3, padding=1),
+        	nn.Conv2d(348, 348, kernel_size=3, padding=1),
         	nn.ReLU(inplace=True),
         	nn.MaxPool2d(kernel_size=2, stride=2),
         )
         self.avgpool = nn.AdaptiveAvgPool2d((2, 2))
         self.classifier = nn.Sequential(
-          nn.Dropout(0.8),
-        	nn.Linear(256 * 2 * 2, 1024),
+          nn.Dropout(0.6),
+        	nn.Linear(348 * 2 * 2, 1024),
         	nn.ReLU(inplace=True),
-          nn.Dropout(0.8),
-			    nn.Linear(1024, 256),
+          nn.Dropout(0.6),
+			    nn.Linear(1024, 348),
         	nn.ReLU(inplace=True),
-          nn.Dropout(0.8),
-        	nn.Linear(256, num_classes),
+          nn.Dropout(0.4),
+        	nn.Linear(348, num_classes),
         )
 
 
