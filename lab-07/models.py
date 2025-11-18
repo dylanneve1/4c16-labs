@@ -22,30 +22,30 @@ class SuperResolutionModel(nn.Module):
         super(SuperResolutionModel, self).__init__()
         
         # Initial feature extraction
-        self.conv_first = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+        self.conv_first = nn.Conv2d(3, 128, kernel_size=3, padding=1)
         
         # Residual blocks for feature learning
         self.residual_blocks = nn.Sequential(
-            *[ResidualBlock(64) for _ in range(6)]
+            *[ResidualBlock(128) for _ in range(10)]
         )
         
         # Middle convolution
-        self.conv_mid = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.conv_mid = nn.Conv2d(128, 128, kernel_size=3, padding=1)
         
         # Upsampling via pixel shuffle (4x = 2x → 2x)
         self.upscale = nn.Sequential(
             # First 2x upsampling
-            nn.Conv2d(64, 256, kernel_size=3, padding=1),
-            nn.PixelShuffle(2),  # 64 channels, 64x64
+            nn.Conv2d(128, 512, kernel_size=3, padding=1),
+            nn.PixelShuffle(2),
             nn.ReLU(inplace=True),
             
             # Second 2x upsampling
-            nn.Conv2d(64, 256, kernel_size=3, padding=1),
-            nn.PixelShuffle(2),  # 64 channels, 128x128
+            nn.Conv2d(128, 512, kernel_size=3, padding=1),
+            nn.PixelShuffle(2),
             nn.ReLU(inplace=True),
             
             # Final reconstruction
-            nn.Conv2d(64, 3, kernel_size=3, padding=1)
+            nn.Conv2d(128, 3, kernel_size=3, padding=1)
         )
         
     def forward(self, x):
