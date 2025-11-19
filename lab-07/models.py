@@ -1,62 +1,113 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-class ResidualBlock(nn.Module):
-    def __init__(self, channels):
-        super(ResidualBlock, self).__init__()
-        self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
-        self.relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
-        
+class ChannelAttention(nn.Module):
+    """
+    Channel Attention (CA) Layer.
+    Learns which channels contain key texture info and re-weights them.
+    """
+    def __init__(self, n_feats, reduction=16):
+        super(ChannelAttention, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.conv_du = nn.Sequential(
+            nn.Conv2d(n_feats, n_feats // reduction, 1, padding=0, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(n_feats // reduction, n_feats, 1, padding=0, bias=True),
+            nn.Sigmoid()
+        )
+
     def forward(self, x):
-        residual = x
-        out = self.relu(self.conv1(x))
-        out = self.conv2(out)
-        out = out + residual
-        return out
+        y = self.avg_pool(x)
+        y = self.conv_du(y)
+        return x * y
 
+class RCAB(nn.Module):
+    """
+    Residual Channel Attention Block (RCAB).
+    Basic building block: Conv -> ReLU -> Conv -> CA -> Residual
+    """
+    def __init__(self, n_feats, reduction=16):
+        super(RCAB, self).__init__()
+        self.body = nn.Sequential(
+            nn.Conv2d(n_feats, n_feats, 3, padding=1, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(n_feats, n_feats, 3, padding=1, bias=True),
+            ChannelAttention(n_feats, reduction)
+        )
+
+    def forward(self, x):
+        res = self.body(x)
+        return res + x
+
+class ResidualGroup(nn.Module):
+    """
+    Residual Group (RG).
+    A group of RCABs with a skip connection at the end.
+    """
+    def __init__(self, n_feats, n_resblocks, reduction):
+        super(ResidualGroup, self).__init__()
+        modules_body = [
+            RCAB(n_feats, reduction) for _ in range(n_resblocks)
+        ]
+        modules_body.append(nn.Conv2d(n_feats, n_feats, 3, padding=1))
+        self.body = nn.Sequential(*modules_body)
+
+    def forward(self, x):
+        res = self.body(x)
+        return res + x
 
 class SuperResolutionModel(nn.Module):
+    """
+    RCAN Architecture (Optimized for <5M params).
+    Configuration:
+      - Channels: 64 (standard for SR)
+      - Groups: 5
+      - Blocks per Group: 11
+      - Total Depth: ~55 non-linear layers
+      - Upsampling: Progressive (2x -> 2x) for efficiency
+    """
     def __init__(self):
         super(SuperResolutionModel, self).__init__()
         
-        # Initial feature extraction
-        self.conv_first = nn.Conv2d(3, 128, kernel_size=3, padding=1)
+        # --- Configuration ---
+        n_feats = 64
+        n_resgroups = 5
+        n_resblocks = 11
+        reduction = 16
+        scale = 4 
         
-        # Residual blocks for feature learning
-        self.residual_blocks = nn.Sequential(
-            *[ResidualBlock(128) for _ in range(10)]
-        )
+        # 1. Shallow feature extraction
+        self.head = nn.Conv2d(3, n_feats, 3, padding=1)
         
-        # Middle convolution
-        self.conv_mid = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        # 2. Deep feature extraction (Residual Groups)
+        modules_body = [
+            ResidualGroup(n_feats, n_resblocks, reduction) for _ in range(n_resgroups)
+        ]
+        modules_body.append(nn.Conv2d(n_feats, n_feats, 3, padding=1))
+        self.body = nn.Sequential(*modules_body)
         
-        # Upsampling via pixel shuffle (4x = 2x → 2x)
-        self.upscale = nn.Sequential(
-            # First 2x upsampling
-            nn.Conv2d(128, 512, kernel_size=3, padding=1),
+        # 3. Upsampling (Progressive: 2x then 2x = 4x)
+        # Progressive is more parameter efficient than direct 4x
+        self.tail = nn.Sequential(
+            # 2x
+            nn.Conv2d(n_feats, n_feats * 4, 3, padding=1),
             nn.PixelShuffle(2),
             nn.ReLU(inplace=True),
-            
-            # Second 2x upsampling
-            nn.Conv2d(128, 512, kernel_size=3, padding=1),
+            # 2x
+            nn.Conv2d(n_feats, n_feats * 4, 3, padding=1),
             nn.PixelShuffle(2),
             nn.ReLU(inplace=True),
-            
             # Final reconstruction
-            nn.Conv2d(128, 3, kernel_size=3, padding=1)
+            nn.Conv2d(n_feats, 3, 3, padding=1)
         )
-        
+
     def forward(self, x):
         # x: (B, 3, 32, 32)
-        x = self.conv_first(x)          # (B, 64, 32, 32)
+        x = self.head(x)
         
-        residual = x
-        x = self.residual_blocks(x)     # (B, 64, 32, 32)
-        x = self.conv_mid(x)            # (B, 64, 32, 32)
-        x = x + residual                # Skip connection
+        res = self.body(x)
+        res += x  # Global Long Skip Connection
         
-        x = self.upscale(x)             # (B, 3, 128, 128)
-        
-        return x
+        out = self.tail(res)
+        # out: (B, 3, 128, 128)
+        return out
